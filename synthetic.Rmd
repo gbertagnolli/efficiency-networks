@@ -1,0 +1,283 @@
+---
+  title: Build synthetic networks
+  author: Giulia Bertagnolli
+  output:
+    html_document:
+      fig_caption: true
+      fig_width: 11
+      fig_height: 8
+      fig_align: 'center'
+      code_folding: hide
+  bibliography: biblio.bib
+---
+
+<style>
+.main-container {
+  max-width: 85%
+}
+</style>
+
+```{r load-packages, echo = FALSE, warning = FALSE}
+rm(list = ls())
+library(igraph)
+library(tidyverse)
+library(ggstance)
+```
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(dev = c("png", "pdf"),
+                      fig.path = "imgs/synthetic/",
+                      fig.width = 4, fig.height = 3)
+igraph_options(vertex.label = NA, vertex.frame.color = "white",
+               vertex.frame.size = 3, edge.arrow.size = .5)
+```
+
+```{r setup-sim, echo = F}
+set.seed(37)  # seed for generation of random samples
+n <- 30       # number of samples
+```
+
+## 1. Full network topology (clique)
+
+
+```{r synthetic, echo = TRUE}
+N <- 30
+g <- make_full_graph(n = N)
+m <- gsize(g)
+```
+
+We start creating the topology of the networks, a full network with `r N` and `r m` edges. Upon this naive topology  we impose edge weights sampled from two distributions:
+
+* Poisson with varying parameter $\lambda$ for homogeneous weights,
+* power-law with varying parameter $\alpha$ for heterogeneous weights.
+
+We henceforth indicate by $W$ the random variable representing the edge weight, i.e. the intensity of an interaction.
+
+### Homogeneous weights distribution
+
+$W \sim Pois(\lambda)$ with $\lambda \in \{1, \dots, 12\}$.
+With `rpois(m, lambda)` we take a sample of size `r m` from the Poisson distribution with parameter `lambda`.
+
+```{r setup-pois, echo = TRUE}
+lambdas <- 1:12
+```
+
+```{r generate-pois, echo = TRUE}
+weights_pois <- lapply(lambdas, function(lambda) {
+  sapply(1:n, function(i) {
+    1 + rpois(m, lambda)
+  })
+});
+```
+
+
+```{r g-pois, echo = F}
+g_pois <- lapply(seq_along(lambdas), function(l) {
+  tmp <- g
+  E(tmp)$weight <- weights_pois[[l]][, 1]
+  return(tmp)
+})
+```
+
+```{r save-pois, echo = FALSE}
+save(weights_pois, file = "data/synthetic/weights_pois.RData")
+save(g_pois, file = "data/synthetic/g_pois.RData")
+```
+
+```{r weights-pois-boxplots, echo = FALSE, fig.width = 4, fig.height = 3}
+# customise plot theme
+my_bp_theme <- theme(
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(),
+  axis.title.x = element_blank(),
+  axis.text.x = element_blank(),
+  axis.ticks.x = element_blank(),
+  axis.line.x = element_blank(),
+  axis.line.y = element_line(color = "grey")
+)
+# create and save plots in a loop
+bps_pois <- lapply(seq_along(weights_pois), function(i) {
+  tibble(
+    "weight" = as.numeric(weights_pois[[i]])
+  ) %>%
+    ggplot(aes(x = weight, y = -.1)) +
+      # boxplot of the samples
+      geom_boxplot(width = .1, na.rm = T) +
+      geom_hline(yintercept = 0, color = "grey") +
+      annotate("text", x = seq(5, 20, 5), y = rep(-.02, 4),
+        label = seq(5, 20, 5), color = "grey20", size = 3) +
+      # pmf of the poisson
+      geom_point(data = tibble(
+        "x" = 1:26, "y" = dpois(0:25, lambda = lambdas[i])), aes(x, y), inherit.aes = FALSE) +
+      scale_x_continuous(limits = c(1, 26), expand = c(.01, .01)) +
+      scale_y_continuous(limits = c(-.17, .4), breaks = c(0, .2, .4)) +
+      labs(y = "", x = "edge wieght") +
+      my_bp_theme -> p
+      show(p)
+      return(p)
+});
+```
+
+---
+
+### Heterogeneous weights distribution
+
+$W \sim p(w; \alpha, w_{\min})$ that is:
+\[
+p(w; x_{\min}, \alpha) = \frac{\alpha-1}{w_{\min }}\left(\frac{w}{w_{\min }}\right)^{-\alpha}
+\]
+see @clauset2009power for a reference.
+
+```{r setup-pwl, echo = TRUE}
+# power-law from uniformly randomly sampled (Clauset Appx.D)
+rpower <- function(n, x_min, alpha) {
+  r <- runif(m)
+  x_min * (1 - r) ** (-1 / (alpha - 1))
+}
+dpower <- function(x, x_min, alpha) {
+  (alpha - 1) / x_min * ((x / x_min) ^ -alpha)
+}
+# parameter space
+x_min <- 5
+alphas <- seq(1.5, 7, .5)
+```
+
+```{r generate-pwl, echo = TRUE}
+weights_pwl <- lapply(alphas, function(alpha) {
+  sapply(1:n, function(i) {
+    rpower(n, x_min, alpha)
+  });
+})
+```
+
+```{r g-pwl, echo = FALSE}
+g_pwl <- lapply(seq_along(alphas), function(l) {
+  tmp <- g
+  E(tmp)$weight <- weights_pwl[[l]][, 1]
+  return(tmp)
+})
+```
+
+```{r save-pwl, echo = FALSE}
+save(g_pwl, file = "data/synthetic/g_pwl.RData")
+save(weights_pwl, file = "data/synthetic/weights_pwl.RData")
+```
+
+```{r weights-pwl-boxplots, echo = FALSE, fig.width = 4, fig.height = 3}
+bps_pwl <- lapply(seq_along(weights_pwl), function(i) {
+  pwl_pdf <- tibble(
+    "x" = seq(5, 20, .1),
+    "px" = dpower(seq(5, 20, .1), x_min = 5,  alpha = alphas[i])
+  )
+  tibble(
+    "weight" = as.numeric(weights_pwl[[i]])
+  ) %>%
+    ggplot(aes(x = weight, y = -max(pwl_pdf$px) / 8)) +
+      geom_boxploth(width = (max(pwl_pdf$px) / 10), na.rm = T) +
+      geom_hline(yintercept = 0, color = "grey") +
+      annotate("text", x = seq(5, 20, 5), y = rep(-max(pwl_pdf$px) / 100, 4),
+        label = seq(5, 20, 5), color = "grey20", size = 3) +
+      geom_line(data = pwl_pdf, aes(x, px), inherit.aes = FALSE, na.rm = T) +
+      scale_x_continuous(limits = c(5, 20), expand = c(.01, .01)) +
+      scale_y_continuous(breaks = seq(0, max(pwl_pdf$px), length.out = 5)) +
+      labs(y = "", x = "edge wieght") +
+      my_bp_theme -> p
+      show(p)
+      return(p)
+});
+```
+
+## 2. Weighted networks from network models
+
+The following code does **not** generate the same data as in our paper @bertagnolli2020quantifying, which are available under reasonable request.
+Here we provide some sample code, for obtaining **one** realisation of each network model topology and then generate their edge weights as in @bertagnolli2020quantifying.
+
+The parameters used to generate the networks topology have been chosen such that for $N=256$ we get $\langle k \rangle=12$.
+
+### Barabasi--Albert model with weights
+
+```{r synthetic-BA}
+N <- 256
+g_BA <- sample_pa(n = N, m = 12 / 2, power = 1, directed = FALSE)
+```
+
+This network is unweighted and we add link weights following the rule
+$$w_{ij} = k_i^{- \beta}$$
+for varying parameter $\beta$.
+
+```{r setup-parameters-weights}
+betas <- seq(-5, 5)
+unitary_matrix <- matrix(1, N, N)
+```
+
+#### Generating links weights
+
+```{r BA-degrees}
+degree_BA <- degree(g_BA)
+```
+
+```{r BA-weights}
+weighted_adj_BA_list <- lapply(betas, function(beta) {
+  degree_BA ^ beta * unitary_matrix * as_adjacency_matrix(g_BA)
+})
+```
+
+Now, we have a list (where the index runs from 1 to `r length(betas)` and represents the `beta` parameter), where each element of the list is a weighted adjacency matrix.
+Observe that the 11th element corresponds to $\beta = 0$ and to the unweighted case. Except for the case $\beta = 0$, the networks become **directed**, since the weighted adjacency matrices are no more symmetric.
+
+
+```{r weighted-BAs}
+weighted_g_BA_list <- lapply(seq_along(betas), function(i) {
+  W <- weighted_adj_BA_list[[i]]
+  graph_from_adjacency_matrix(W, weighted = TRUE)
+})
+```
+
+```{r plot-BA, echo = FALSE}
+lapply(weighted_g_BA_list, function(g) {
+  edge_width <- E(g)$weight / max(E(g)$weight)
+  plot(g, edge.width = 1 + edge_width)
+});
+```
+
+### Watts--Strogatz model with weights
+
+We do the same for a WS model.
+
+```{r synthetic-WS, echo = TRUE}
+g_WS <- sample_smallworld(dim = 2, size = sqrt(N), nei = 2, p = 0.1,
+                          multiple = F, loops = F)
+```
+
+#### Generating links weights
+
+```{r WS-degrees}
+degree_WS <- degree(g_WS)
+```
+
+```{r WS-weights}
+weighted_adj_WS_list <- lapply(betas, function(beta) {
+  degree_WS ^ beta * unitary_matrix * as_adjacency_matrix(g_WS)
+})
+```
+
+```{r weighted-WSs}
+weighted_g_WS_list <- lapply(seq_along(betas), function(i) {
+  W <- weighted_adj_WS_list[[i]]
+  graph_from_adjacency_matrix(W, weighted = TRUE)
+})
+```
+
+```{r plot-WS, echo = FALSE}
+lapply(weighted_g_WS_list, function(g) {
+  edge_width <- E(g)$weight / max(E(g)$weight)
+  plot(g, edge.width = 1 + edge_width)
+});
+```
+
+```{r save-BA-WS, echo = FALSE}
+save(g_BA, degree_BA, weighted_adj_BA_list, weighted_g_BA_list,
+     file = "data/synthetic/weighted_WS.RData")
+save(g_WS, degree_WS, weighted_adj_WS_list, weighted_g_WS_list,
+     file = "data/synthetic/weighted_WS.RData")
+```
