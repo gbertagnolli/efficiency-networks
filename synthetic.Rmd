@@ -277,7 +277,7 @@ wWS_plots <- lapply(weighted_g_WS_list, function(g) {
 
 ```{r save-BA-WS, echo = FALSE}
 save(g_BA, degree_BA, weighted_adj_BA_list, weighted_g_BA_list,
-     file = "data/synthetic/weighted_WS.RData")
+     file = "data/synthetic/weighted_BA.RData")
 save(g_WS, degree_WS, weighted_adj_WS_list, weighted_g_WS_list,
      file = "data/synthetic/weighted_WS.RData")
 ```
