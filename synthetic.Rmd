@@ -3,19 +3,18 @@
   author: Giulia Bertagnolli
   output:
     html_document:
+      theme: paper
       fig_caption: true
-      fig_width: 11
-      fig_height: 8
       fig_align: 'center'
       code_folding: hide
+      toc: true
+      toc_depth: 3
+      toc_float: true
+      number_sections: true
+    github_document:
+      pandoc_args: --webtex
   bibliography: biblio.bib
 ---
-
-<style>
-.main-container {
-  max-width: 85%
-}
-</style>
 
 ```{r load-packages, echo = FALSE, warning = FALSE}
 rm(list = ls())
@@ -37,7 +36,7 @@ set.seed(37)  # seed for generation of random samples
 n <- 30       # number of samples
 ```
 
-## 1. Full network topology (clique)
+## Full network topology (clique)
 
 
 ```{r synthetic, echo = TRUE}
@@ -123,9 +122,9 @@ bps_pois <- lapply(seq_along(weights_pois), function(i) {
 ### Heterogeneous weights distribution
 
 $W \sim p(w; \alpha, w_{\min})$ that is:
-\[
+$$
 p(w; x_{\min}, \alpha) = \frac{\alpha-1}{w_{\min }}\left(\frac{w}{w_{\min }}\right)^{-\alpha}
-\]
+$$
 see @clauset2009power for a reference.
 
 ```{r setup-pwl, echo = TRUE}
@@ -187,7 +186,7 @@ bps_pwl <- lapply(seq_along(weights_pwl), function(i) {
 });
 ```
 
-## 2. Weighted networks from network models
+## Weighted networks from network models
 
 The following code does **not** generate the same data as in our paper @bertagnolli2020quantifying, which are available under reasonable request.
 Here we provide some sample code, for obtaining **one** realisation of each network model topology and then generate their edge weights as in @bertagnolli2020quantifying.
@@ -230,14 +229,14 @@ Observe that the 11th element corresponds to $\beta = 0$ and to the unweighted c
 weighted_g_BA_list <- lapply(seq_along(betas), function(i) {
   W <- weighted_adj_BA_list[[i]]
   graph_from_adjacency_matrix(W, weighted = TRUE)
-})
+});
 ```
 
-```{r plot-BA, echo = FALSE}
-lapply(weighted_g_BA_list, function(g) {
+```{r plot-BA, echo = FALSE, include = TRUE}
+wBA_plots <- lapply(weighted_g_BA_list, function(g) {
   edge_width <- E(g)$weight / max(E(g)$weight)
-  plot(g, edge.width = 1 + edge_width)
-});
+  plot(g, edge.width = 1 + edge_width);
+})
 ```
 
 ### Watts--Strogatz model with weights
@@ -264,14 +263,15 @@ weighted_adj_WS_list <- lapply(betas, function(beta) {
 ```{r weighted-WSs}
 weighted_g_WS_list <- lapply(seq_along(betas), function(i) {
   W <- weighted_adj_WS_list[[i]]
-  graph_from_adjacency_matrix(W, weighted = TRUE)
-})
+  g <- graph_from_adjacency_matrix(W, weighted = TRUE)
+  return(g)
+});
 ```
 
-```{r plot-WS, echo = FALSE}
-lapply(weighted_g_WS_list, function(g) {
+```{r plot-WS, echo = FALSE, include = TRUE}
+wWS_plots <- lapply(weighted_g_WS_list, function(g) {
   edge_width <- E(g)$weight / max(E(g)$weight)
-  plot(g, edge.width = 1 + edge_width)
+  plot(g, edge.width = 1 + edge_width);
 });
 ```
 

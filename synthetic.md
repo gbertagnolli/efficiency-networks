@@ -2,47 +2,7 @@ Build synthetic networks
 ================
 Giulia Bertagnolli
 
-<style>
-.main-container {
-  max-width: 85%
-}
-</style>
-
-    ## 
-    ## Attaching package: 'igraph'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     decompose, spectrum
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     union
-
-    ## ── Attaching packages ──────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
-
-    ## ✔ ggplot2 3.3.3     ✔ purrr   0.3.4
-    ## ✔ tibble  3.1.0     ✔ dplyr   1.0.4
-    ## ✔ tidyr   1.1.2     ✔ stringr 1.4.0
-    ## ✔ readr   1.4.0     ✔ forcats 0.5.1
-
-    ## ── Conflicts ─────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::as_data_frame() masks tibble::as_data_frame(), igraph::as_data_frame()
-    ## ✖ purrr::compose()       masks igraph::compose()
-    ## ✖ tidyr::crossing()      masks igraph::crossing()
-    ## ✖ dplyr::filter()        masks stats::filter()
-    ## ✖ dplyr::groups()        masks igraph::groups()
-    ## ✖ dplyr::lag()           masks stats::lag()
-    ## ✖ purrr::simplify()      masks igraph::simplify()
-
-    ## 
-    ## Attaching package: 'ggstance'
-
-    ## The following objects are masked from 'package:ggplot2':
-    ## 
-    ##     geom_errorbarh, GeomErrorbarh
-
-## 1\. Full network topology (clique)
+## Full network topology (clique)
 
 ``` r
 N <- 30
@@ -54,18 +14,26 @@ We start creating the topology of the networks, a full network with 30
 and 435 edges. Upon this naive topology we impose edge weights sampled
 from two distributions:
 
-  - Poisson with varying parameter \(\lambda\) for homogeneous weights,
-  - power-law with varying parameter \(\alpha\) for heterogeneous
-    weights.
+  - Poisson with varying parameter
+    ![\\lambda](https://latex.codecogs.com/png.latex?%5Clambda
+    "\\lambda") for homogeneous weights,
+  - power-law with varying parameter
+    ![\\alpha](https://latex.codecogs.com/png.latex?%5Calpha "\\alpha")
+    for heterogeneous weights.
 
-We henceforth indicate by \(W\) the random variable representing the
-edge weight, i.e. the intensity of an interaction.
+We henceforth indicate by ![W](https://latex.codecogs.com/png.latex?W
+"W") the random variable representing the edge weight, i.e. the
+intensity of an interaction.
 
 ### Homogeneous weights distribution
 
-\(W \sim Pois(\lambda)\) with \(\lambda \in \{1, \dots, 12\}\). With
-`rpois(m, lambda)` we take a sample of size 435 from the Poisson
-distribution with parameter `lambda`.
+![W \\sim
+Pois(\\lambda)](https://latex.codecogs.com/png.latex?W%20%5Csim%20Pois%28%5Clambda%29
+"W \\sim Pois(\\lambda)") with ![\\lambda \\in \\{1,
+\\dots, 12\\}](https://latex.codecogs.com/png.latex?%5Clambda%20%5Cin%20%5C%7B1%2C%20%5Cdots%2C%2012%5C%7D
+"\\lambda \\in \\{1, \\dots, 12\\}"). With `rpois(m, lambda)` we take a
+sample of size 435 from the Poisson distribution with parameter
+`lambda`.
 
 ``` r
 lambdas <- 1:12
@@ -85,9 +53,17 @@ weights_pois <- lapply(lambdas, function(lambda) {
 
 ### Heterogeneous weights distribution
 
-\(W \sim p(w; \alpha, w_{\min})\) that is: \[
-p(w; x_{\min}, \alpha) = \frac{\alpha-1}{w_{\min }}\left(\frac{w}{w_{\min }}\right)^{-\alpha}
-\] see Clauset, Shalizi, and Newman (2009) for a reference.
+![W \\sim p(w; \\alpha,
+w\_{\\min})](https://latex.codecogs.com/png.latex?W%20%5Csim%20p%28w%3B%20%5Calpha%2C%20w_%7B%5Cmin%7D%29
+"W \\sim p(w; \\alpha, w_{\\min})") that is:   
+![
+p(w; x\_{\\min}, \\alpha) = \\frac{\\alpha-1}{w\_{\\min
+}}\\left(\\frac{w}{w\_{\\min }}\\right)^{-\\alpha}
+](https://latex.codecogs.com/png.latex?%0Ap%28w%3B%20x_%7B%5Cmin%7D%2C%20%5Calpha%29%20%3D%20%5Cfrac%7B%5Calpha-1%7D%7Bw_%7B%5Cmin%20%7D%7D%5Cleft%28%5Cfrac%7Bw%7D%7Bw_%7B%5Cmin%20%7D%7D%5Cright%29%5E%7B-%5Calpha%7D%0A
+"
+p(w; x_{\\min}, \\alpha) = \\frac{\\alpha-1}{w_{\\min }}\\left(\\frac{w}{w_{\\min }}\\right)^{-\\alpha}
+")  
+see Clauset, Shalizi, and Newman (2009) for a reference.
 
 ``` r
 # power-law from uniformly randomly sampled (Clauset Appx.D)
@@ -113,7 +89,7 @@ weights_pwl <- lapply(alphas, function(alpha) {
 
 ![](imgs/synthetic/weights-pwl-boxplots-1.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-2.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-3.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-4.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-5.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-6.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-7.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-8.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-9.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-10.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-11.png)<!-- -->![](imgs/synthetic/weights-pwl-boxplots-12.png)<!-- -->
 
-## 2\. Weighted networks from network models
+## Weighted networks from network models
 
 The following code does **not** generate the same data as in our paper
 Bertagnolli, Gallotti, and De Domenico (2020), which are available under
@@ -122,7 +98,10 @@ reasonable request. Here we provide some sample code, for obtaining
 their edge weights as in Bertagnolli, Gallotti, and De Domenico (2020).
 
 The parameters used to generate the networks topology have been chosen
-such that for \(N=256\) we get \(\langle k \rangle=12\).
+such that for ![N=256](https://latex.codecogs.com/png.latex?N%3D256
+"N=256") we get ![\\langle k
+\\rangle=12](https://latex.codecogs.com/png.latex?%5Clangle%20k%20%5Crangle%3D12
+"\\langle k \\rangle=12").
 
 ### Barabasi–Albert model with weights
 
@@ -131,8 +110,12 @@ N <- 256
 g_BA <- sample_pa(n = N, m = 12 / 2, power = 1, directed = FALSE)
 ```
 
-This network is unweighted and we add link weights following the rule
-\[w_{ij} = k_i^{- \beta}\] for varying parameter \(\beta\).
+This network is unweighted and we add link weights following the rule   
+![w\_{ij} = k\_i^{-
+\\beta}](https://latex.codecogs.com/png.latex?w_%7Bij%7D%20%3D%20k_i%5E%7B-%20%5Cbeta%7D
+"w_{ij} = k_i^{- \\beta}")  
+for varying parameter
+![\\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\\beta").
 
 ``` r
 betas <- seq(-5, 5)
@@ -153,52 +136,21 @@ weighted_adj_BA_list <- lapply(betas, function(beta) {
 
 Now, we have a list (where the index runs from 1 to 11 and represents
 the `beta` parameter), where each element of the list is a weighted
-adjacency matrix. Observe that the 11th element corresponds to
-\(\beta = 0\) and to the unweighted case. Except for the case
-\(\beta = 0\), the networks become **directed**, since the weighted
+adjacency matrix. Observe that the 11th element corresponds to ![\\beta
+= 0](https://latex.codecogs.com/png.latex?%5Cbeta%20%3D%200
+"\\beta = 0") and to the unweighted case. Except for the case ![\\beta
+= 0](https://latex.codecogs.com/png.latex?%5Cbeta%20%3D%200
+"\\beta = 0"), the networks become **directed**, since the weighted
 adjacency matrices are no more symmetric.
 
 ``` r
 weighted_g_BA_list <- lapply(seq_along(betas), function(i) {
   W <- weighted_adj_BA_list[[i]]
   graph_from_adjacency_matrix(W, weighted = TRUE)
-})
+});
 ```
 
 ![](imgs/synthetic/plot-BA-1.png)<!-- -->![](imgs/synthetic/plot-BA-2.png)<!-- -->![](imgs/synthetic/plot-BA-3.png)<!-- -->![](imgs/synthetic/plot-BA-4.png)<!-- -->![](imgs/synthetic/plot-BA-5.png)<!-- -->![](imgs/synthetic/plot-BA-6.png)<!-- -->![](imgs/synthetic/plot-BA-7.png)<!-- -->![](imgs/synthetic/plot-BA-8.png)<!-- -->![](imgs/synthetic/plot-BA-9.png)<!-- -->![](imgs/synthetic/plot-BA-10.png)<!-- -->![](imgs/synthetic/plot-BA-11.png)<!-- -->
-
-    ## [[1]]
-    ## NULL
-    ## 
-    ## [[2]]
-    ## NULL
-    ## 
-    ## [[3]]
-    ## NULL
-    ## 
-    ## [[4]]
-    ## NULL
-    ## 
-    ## [[5]]
-    ## NULL
-    ## 
-    ## [[6]]
-    ## NULL
-    ## 
-    ## [[7]]
-    ## NULL
-    ## 
-    ## [[8]]
-    ## NULL
-    ## 
-    ## [[9]]
-    ## NULL
-    ## 
-    ## [[10]]
-    ## NULL
-    ## 
-    ## [[11]]
-    ## NULL
 
 ### Watts–Strogatz model with weights
 
@@ -224,44 +176,12 @@ weighted_adj_WS_list <- lapply(betas, function(beta) {
 ``` r
 weighted_g_WS_list <- lapply(seq_along(betas), function(i) {
   W <- weighted_adj_WS_list[[i]]
-  graph_from_adjacency_matrix(W, weighted = TRUE)
-})
+  g <- graph_from_adjacency_matrix(W, weighted = TRUE)
+  return(g)
+});
 ```
 
 ![](imgs/synthetic/plot-WS-1.png)<!-- -->![](imgs/synthetic/plot-WS-2.png)<!-- -->![](imgs/synthetic/plot-WS-3.png)<!-- -->![](imgs/synthetic/plot-WS-4.png)<!-- -->![](imgs/synthetic/plot-WS-5.png)<!-- -->![](imgs/synthetic/plot-WS-6.png)<!-- -->![](imgs/synthetic/plot-WS-7.png)<!-- -->![](imgs/synthetic/plot-WS-8.png)<!-- -->![](imgs/synthetic/plot-WS-9.png)<!-- -->![](imgs/synthetic/plot-WS-10.png)<!-- -->![](imgs/synthetic/plot-WS-11.png)<!-- -->
-
-    ## [[1]]
-    ## NULL
-    ## 
-    ## [[2]]
-    ## NULL
-    ## 
-    ## [[3]]
-    ## NULL
-    ## 
-    ## [[4]]
-    ## NULL
-    ## 
-    ## [[5]]
-    ## NULL
-    ## 
-    ## [[6]]
-    ## NULL
-    ## 
-    ## [[7]]
-    ## NULL
-    ## 
-    ## [[8]]
-    ## NULL
-    ## 
-    ## [[9]]
-    ## NULL
-    ## 
-    ## [[10]]
-    ## NULL
-    ## 
-    ## [[11]]
-    ## NULL
 
 <div id="refs" class="references">
 
